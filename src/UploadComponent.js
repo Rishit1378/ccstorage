@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { API, Auth } from "aws-amplify";
+import { API } from "aws-amplify"; // Changed
+import { fetchAuthSession } from "@aws-amplify/auth"; // Added
 import axios from "axios";
 
 // Simple styling, you can make this look like your slides
@@ -25,9 +26,11 @@ function UploadComponent() {
 
     setStatus("Getting upload URL...");
     try {
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      // 1. Get the current user's auth token (v6 way)
+      const session = await fetchAuthSession(); // Changed
+      const token = session.tokens.idToken.toString(); // Changed
 
+      // 2. Call our API Gateway to get the presigned URL
       const apiName = "CloudStoreAPI";
       const path = "/upload";
       const init = {
@@ -42,6 +45,7 @@ function UploadComponent() {
 
       setStatus("Uploading file...");
 
+      // 3. Upload the file directly to S3 using the presigned URL
       await axios.put(uploadUrl, selectedFile, {
         headers: { "Content-Type": selectedFile.type },
       });

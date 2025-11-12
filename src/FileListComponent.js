@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { API, Auth } from "aws-amplify";
+import { API } from "aws-amplify"; // Changed
+import { fetchAuthSession } from "@aws-amplify/auth"; // Added
 
 function FileListComponent() {
   const [files, setFiles] = useState([]);
@@ -12,8 +13,9 @@ function FileListComponent() {
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      // v6 way
+      const session = await fetchAuthSession(); // Changed
+      const token = session.tokens.idToken.toString(); // Changed
 
       const apiName = "CloudStoreAPI";
       const path = "/files";
@@ -29,8 +31,9 @@ function FileListComponent() {
 
   const handleDownload = async (s3Key) => {
     try {
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      // v6 way
+      const session = await fetchAuthSession(); // Changed
+      const token = session.tokens.idToken.toString(); // Changed
 
       const apiName = "CloudStoreAPI";
       const path = "/download";
@@ -50,8 +53,9 @@ function FileListComponent() {
     if (!window.confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      const session = await Auth.currentSession();
-      const token = session.getIdToken().getJwtToken();
+      // v6 way
+      const session = await fetchAuthSession(); // Changed
+      const token = session.tokens.idToken.toString(); // Changed
 
       const apiName = "CloudStoreAPI";
       const path = "/file";
