@@ -40,7 +40,6 @@ function FileListComponent() {
       };
 
       const response = await API.get(apiName, path, init);
-      // Open the secure download URL in a new tab
       window.open(response.downloadUrl, "_blank");
     } catch (error) {
       console.error("Error getting download link:", error);
@@ -48,6 +47,8 @@ function FileListComponent() {
   };
 
   const handleDelete = async (fileId, s3Key) => {
+    if (!window.confirm("Are you sure you want to delete this file?")) return;
+
     try {
       const session = await Auth.currentSession();
       const token = session.getIdToken().getJwtToken();
@@ -60,8 +61,7 @@ function FileListComponent() {
       };
 
       await API.del(apiName, path, init);
-      // Refresh the file list
-      fetchFiles();
+      fetchFiles(); // Refresh the file list
     } catch (error) {
       console.error("Error deleting file:", error);
     }
@@ -71,18 +71,35 @@ function FileListComponent() {
 
   return (
     <div>
-      <h3>My Files</h3>
+      <h2>My Files</h2>
+      <button onClick={fetchFiles}>Refresh</button>
+      <hr />
       {files.length === 0 ? (
-        <p>No files yet. Upload your first file!</p>
+        <div>
+          <p>No files yet. Upload your first file!</p>
+        </div>
       ) : (
-        <ul>
+        <ul style={{ listStyle: "none", padding: 0 }}>
           {files.map((file) => (
-            <li key={file.fileId}>
+            <li
+              key={file.fileId}
+              style={{
+                border: "1px solid #ccc",
+                padding: "10px",
+                margin: "5px",
+              }}
+            >
               {file.fileName}
-              <button onClick={() => handleDownload(file.s3Key)}>
+              <button
+                onClick={() => handleDownload(file.s3Key)}
+                style={{ float: "right", marginLeft: "10px" }}
+              >
                 Download
               </button>
-              <button onClick={() => handleDelete(file.fileId, file.s3Key)}>
+              <button
+                onClick={() => handleDelete(file.fileId, file.s3Key)}
+                style={{ float: "right", color: "red" }}
+              >
                 Delete
               </button>
             </li>
@@ -92,3 +109,5 @@ function FileListComponent() {
     </div>
   );
 }
+
+export default FileListComponent;
