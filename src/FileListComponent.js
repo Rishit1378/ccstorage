@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { API } from "aws-amplify"; // Changed
-import { fetchAuthSession } from "@aws-amplify/auth"; // Added
+import { get, del } from "@aws-amplify/api"; // Changed: Import 'get' and 'del'
+import { fetchAuthSession } from "@aws-amplify/auth";
 
 function FileListComponent() {
   const [files, setFiles] = useState([]);
@@ -13,16 +13,23 @@ function FileListComponent() {
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      // v6 way
-      const session = await fetchAuthSession(); // Changed
-      const token = session.tokens.idToken.toString(); // Changed
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
 
       const apiName = "CloudStoreAPI";
       const path = "/files";
-      const init = { headers: { Authorization: token } };
 
-      const response = await API.get(apiName, path, init);
-      setFiles(response);
+      // New v6 GET call
+      const response = await get({
+        apiName: apiName,
+        path: path,
+        options: {
+          headers: { Authorization: token },
+        },
+      }).response;
+
+      const body = await response.body.json(); // Get the JSON body
+      setFiles(body); // Set files from the parsed body
     } catch (error) {
       console.error("Error fetching files:", error);
     }
@@ -31,19 +38,24 @@ function FileListComponent() {
 
   const handleDownload = async (s3Key) => {
     try {
-      // v6 way
-      const session = await fetchAuthSession(); // Changed
-      const token = session.tokens.idToken.toString(); // Changed
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
 
       const apiName = "CloudStoreAPI";
       const path = "/download";
-      const init = {
-        headers: { Authorization: token },
-        queryStringParameters: { s3Key: s3Key },
-      };
 
-      const response = await API.get(apiName, path, init);
-      window.open(response.downloadUrl, "_blank");
+      // New v6 GET call
+      const response = await get({
+        apiName: apiName,
+        path: path,
+        options: {
+          headers: { Authorization: token },
+          queryStringParameters: { s3Key: s3Key },
+        },
+      }).response;
+
+      const body = await response.body.json();
+      window.open(body.downloadUrl, "_blank");
     } catch (error) {
       console.error("Error getting download link:", error);
     }
@@ -53,18 +65,23 @@ function FileListComponent() {
     if (!window.confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      // v6 way
-      const session = await fetchAuthSession(); // Changed
-      const token = session.tokens.idToken.toString(); // Changed
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
 
       const apiName = "CloudStoreAPI";
       const path = "/file";
-      const init = {
-        headers: { Authorization: token },
-        body: { fileId: fileId, s3Key: s3Key },
-      };
 
-      await API.del(apiName, path, init);
+      // New v6 DELETE call
+      await del({
+        // Changed from API.del
+        apiName: apiName,
+        path: path,
+        options: {
+          headers: { Authorization: token },
+          body: { fileId: fileId, s3Key: s3Key },
+        },
+      }).response;
+
       fetchFiles(); // Refresh the file list
     } catch (error) {
       console.error("Error deleting file:", error);

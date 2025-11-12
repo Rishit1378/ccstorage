@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { API } from "aws-amplify"; // Changed
-import { fetchAuthSession } from "@aws-amplify/auth"; // Added
+import { post } from "@aws-amplify/api"; // Changed: Import 'post'
+import { fetchAuthSession } from "@aws-amplify/auth";
 import axios from "axios";
 
 // Simple styling, you can make this look like your slides
@@ -26,26 +26,30 @@ function UploadComponent() {
 
     setStatus("Getting upload URL...");
     try {
-      // 1. Get the current user's auth token (v6 way)
-      const session = await fetchAuthSession(); // Changed
-      const token = session.tokens.idToken.toString(); // Changed
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken.toString();
 
-      // 2. Call our API Gateway to get the presigned URL
       const apiName = "CloudStoreAPI";
       const path = "/upload";
-      const init = {
-        headers: { Authorization: token },
-        body: {
-          fileName: selectedFile.name,
-          fileType: selectedFile.type,
+
+      // This is the new v6 API call syntax
+      const response = await post({
+        apiName: apiName,
+        path: path,
+        options: {
+          headers: { Authorization: token },
+          body: {
+            fileName: selectedFile.name,
+            fileType: selectedFile.type,
+          },
         },
-      };
-      const response = await API.post(apiName, path, init);
-      const { uploadUrl } = response;
+      }).response; // Await the response object
+
+      const body = await response.body.json(); // Get the JSON body
+      const { uploadUrl } = body; // Deconstruct from the parsed body
 
       setStatus("Uploading file...");
 
-      // 3. Upload the file directly to S3 using the presigned URL
       await axios.put(uploadUrl, selectedFile, {
         headers: { "Content-Type": selectedFile.type },
       });
