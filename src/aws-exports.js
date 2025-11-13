@@ -1,4 +1,5 @@
-// src/aws-exports.js
+// src/aws-exports.
+
 const awsmobile = {
   aws_project_region: "ap-south-1", // e.g., "us-east-1"
   aws_cognito_region: "ap-south-1",
