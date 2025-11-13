@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { post } from "@aws-amplify/api"; // Changed: Import 'post'
+import { post } from "aws-amplify/api"; // Changed: Import 'post'
 import { fetchAuthSession } from "@aws-amplify/auth";
 import axios from "axios";
 
